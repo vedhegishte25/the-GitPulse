@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Git_Board</title>
+<style>
+  :root {
+    --bg-primary: #0d0d0f;
+    --bg-secondary: #13131a;
+    --bg-card: #1a1a24;
+    --bg-card-hover: #1f1f2e;
+    --border: rgba(255,255,255,0.07);
+    --border-hover: rgba(139,92,246,0.4);
+    --text-primary: #f0f0f5;
+    --text-secondary: #8b8b9e;
+    --text-muted: #55556a;
+    --accent: #8b5cf6;
+    --accent-soft: rgba(139,92,246,0.08);
+    --green: #10b981;
+  }
+  [data-theme="light"] {
+    --bg-primary: #f8f8fc;
+    --bg-secondary: #f0f0f8;
+    --bg-card: #ffffff;
+    --bg-card-hover: #f5f5ff;
+    --border: rgba(0,0,0,0.08);
+    --border-hover: rgba(139,92,246,0.4);
+    --text-primary: #0d0d1a;
+    --text-secondary: #5a5a7a;
+    --text-muted: #9090aa;
+    --accent: #7c3aed;
+    --accent-soft: rgba(124,58,237,0.06);
+    --green: #059669;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow-x: hidden;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  /* SPLASH */
+  #splash {
+    position: fixed; inset: 0; z-index: 9999;
+    background: #0d0d0f;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 20px;
+    transition: opacity 0.6s ease, visibility 0.6s ease;
+  }
+  #splash.hide { opacity: 0; visibility: hidden; }
+  .splash-logo {
+    width: 68px; height: 68px;
+    background: #8b5cf6;
+    border-radius: 18px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 32px;
+    animation: pulse-logo 1.5s ease-in-out infinite;
+  }
+  @keyframes pulse-logo {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.06); }
+  }
+  .splash-title {
+    font-size: 30px; font-weight: 800;
+    color: #f0f0f5; letter-spacing: -0.5px;
+  }
+  .splash-title span { color: #8b5cf6; }
+  .splash-bar {
+    width: 180px; height: 2px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 99px; overflow: hidden;
+  }
+  .splash-fill {
+    height: 100%; width: 0%;
+    background: #8b5cf6;
+    border-radius: 99px;
+    animation: fill-bar 2.2s ease forwards;
+  }
+  @keyframes fill-bar { to { width: 100%; } }
+  .splash-sub { font-size: 13px; color: #55556a; }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    padding: 0 32px; height: 60px;
+    display: flex; align-items: center; justify-content: space-between;
+    background: rgba(13,13,15,0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 0.5px solid var(--border);
+    transition: background 0.3s;
+  }
+  [data-theme="light"] nav { background: rgba(248,248,252,0.88); }
+  .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .nav-logo-icon {
+    width: 30px; height: 30px; background: var(--accent);
+    border-radius: 8px; display: flex; align-items: center;
+    justify-content: center; font-size: 15px;
+  }
+  .nav-logo-text { font-size: 16px; font-weight: 700; color: var(--text-primary); }
+  .nav-logo-text span { color: var(--accent); }
+  .nav-right { display: flex; align-items: center; gap: 10px; }
+  .theme-btn {
+    width: 36px; height: 36px; border-radius: 8px;
+    border: 0.5px solid var(--border);
+    background: var(--bg-card); color: var(--text-secondary);
+    cursor: pointer; font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .theme-btn:hover { border-color: var(--border-hover); }
+  .nav-cta {
+    padding: 8px 18px; border-radius: 8px;
+    background: var(--accent); color: #fff;
+    border: none; cursor: pointer;
+    font-size: 13px; font-weight: 600;
+    transition: opacity 0.2s;
+  }
+  .nav-cta:hover { opacity: 0.85; }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 100px 24px 60px;
+    text-align: center;
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 5px 14px; border-radius: 99px;
+    background: var(--accent-soft);
+    border: 0.5px solid rgba(139,92,246,0.2);
+    font-size: 12px; color: var(--accent);
+    font-weight: 500; margin-bottom: 28px;
+  }
+  .badge-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent);
+    animation: blink 1.5s ease-in-out infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  .hero h1 {
+    font-size: clamp(36px, 6vw, 66px);
+    font-weight: 800; line-height: 1.1;
+    letter-spacing: -1.5px; color: var(--text-primary);
+    margin-bottom: 20px; max-width: 740px;
+  }
+  .hero h1 .accent { color: var(--accent); }
+  .hero p {
+    font-size: 17px; color: var(--text-secondary);
+    max-width: 480px; line-height: 1.7; margin-bottom: 40px;
+  }
+
+  /* SEARCH BOX */
+  .search-wrap {
+    width: 100%; max-width: 560px;
+    background: var(--bg-card);
+    border: 0.5px solid var(--border);
+    border-radius: 14px;
+    padding: 6px 6px 6px 18px;
+    display: flex; align-items: center; gap: 12px;
+    transition: border-color 0.2s; margin-bottom: 48px;
+  }
+  .search-wrap:focus-within { border-color: var(--border-hover); }
+  .search-icon { color: var(--text-muted); flex-shrink: 0; }
+  .search-wrap input {
+    flex: 1; background: none; border: none; outline: none;
+    font-size: 14px; color: var(--text-primary); font-family: inherit;
+  }
+  .search-wrap input::placeholder { color: var(--text-muted); }
+  .search-btn {
+    padding: 10px 22px; border-radius: 10px;
+    background: var(--accent); color: #fff;
+    border: none; cursor: pointer;
+    font-size: 13px; font-weight: 600;
+    transition: opacity 0.2s;
+  }
+  .search-btn:hover { opacity: 0.85; }
+
+  /* STATS */
+  .stats-row {
+    display: flex; gap: 40px; flex-wrap: wrap;
+    justify-content: center; margin-bottom: 80px;
+  }
+  .stat { text-align: center; }
+  .stat-num { font-size: 26px; font-weight: 800; color: var(--text-primary); }
+  .stat-label { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+
+  /* DIVIDER */
+  .divider {
+    background: var(--bg-secondary);
+    border-top: 0.5px solid var(--border);
+    border-bottom: 0.5px solid var(--border);
+  }
+
+  /* SECTION */
+  .section { padding: 80px 24px; max-width: 1100px; margin: 0 auto; }
+  .section-tag {
+    font-size: 11px; font-weight: 700; color: var(--accent);
+    letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 10px;
+  }
+  .section-title {
+    font-size: clamp(24px, 4vw, 38px); font-weight: 800;
+    letter-spacing: -0.5px; color: var(--text-primary); margin-bottom: 12px;
+  }
+  .section-sub {
+    font-size: 15px; color: var(--text-secondary);
+    max-width: 480px; line-height: 1.7; margin-bottom: 48px;
+  }
+
+  /* FEATURE CARDS */
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+  }
+  .feature-card {
+    background: var(--bg-card);
+    border: 0.5px solid var(--border);
+    border-radius: 14px; padding: 24px;
+    transition: border-color 0.2s, transform 0.2s;
+    cursor: default;
+  }
+  .feature-card:hover {
+    border-color: var(--border-hover);
+    transform: translateY(-2px);
+  }
+  .feature-icon {
+    width: 42px; height: 42px; border-radius: 11px;
+    background: var(--accent-soft);
+    border: 0.5px solid rgba(139,92,246,0.15);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 19px; margin-bottom: 16px;
+  }
+  .feature-title {
+    font-size: 15px; font-weight: 600;
+    color: var(--text-primary); margin-bottom: 8px;
+  }
+  .feature-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.65; }
+
+  /* PREVIEW CARDS */
+  .preview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 12px;
+  }
+  .preview-card {
+    background: var(--bg-card);
+    border: 0.5px solid var(--border);
+    border-radius: 12px; padding: 22px;
+  }
+  .preview-label {
+    font-size: 11px; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;
+  }
+  .preview-val { font-size: 30px; font-weight: 800; color: var(--text-primary); }
+  .preview-sub { font-size: 12px; color: var(--green); margin-top: 5px; }
+
+  /* CTA */
+  .cta {
+    text-align: center; padding: 80px 24px;
+    border-top: 0.5px solid var(--border);
+  }
+  .cta h2 {
+    font-size: 32px; font-weight: 800;
+    color: var(--text-primary); margin-bottom: 14px;
+  }
+  .cta p { font-size: 15px; color: var(--text-secondary); margin-bottom: 32px; }
+  .cta-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .btn-primary {
+    padding: 12px 28px; border-radius: 10px;
+    background: var(--accent); color: #fff;
+    border: none; cursor: pointer;
+    font-size: 14px; font-weight: 600; transition: opacity 0.2s;
+  }
+  .btn-primary:hover { opacity: 0.85; }
+  .btn-ghost {
+    padding: 12px 28px; border-radius: 10px;
+    background: transparent; color: var(--text-secondary);
+    border: 0.5px solid var(--border);
+    cursor: pointer; font-size: 14px; font-weight: 500;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .btn-ghost:hover { border-color: var(--border-hover); color: var(--text-primary); }
+
+  /* FOOTER */
+  footer {
+    text-align: center; padding: 24px;
+    font-size: 12px; color: var(--text-muted);
+    border-top: 0.5px solid var(--border);
+  }
+
+  /* FLOATING PROFILE */
+  #profile-bubble {
+    position: fixed; bottom: 16px; right: 16px; z-index: 200;
+    display: flex; align-items: center; gap: 6px;
+    background: var(--bg-card);
+    border: 0.5px solid var(--border);
+    border-radius: 99px;
+    padding: 4px 8px 4px 4px;
+    opacity: 0.4; transition: opacity 0.2s;
+    cursor: pointer; text-decoration: none;
+  }
+  #profile-bubble:hover { opacity: 1; }
+  .p-avatar {
+    width: 22px; height: 22px; border-radius: 50%;
+    overflow: hidden; position: relative; flex-shrink: 0;
+  }
+  .p-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .p-gh {
+    position: absolute; bottom: -1px; right: -2px;
+    width: 10px; height: 10px;
+    background: var(--bg-card); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .p-name { font-size: 11px; color: var(--text-secondary); font-weight: 500; }
+</style>
+</head>
+<body>
+
+<!-- SPLASH SCREEN -->
+<div id="splash">
+  <div class="splash-logo">⬡</div>
+  <div class="splash-title">Git<span>_Board</span></div>
+  <div class="splash-bar"><div class="splash-fill"></div></div>
+  <div class="splash-sub">Initializing analytics engine...</div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="index.html">
+    <div class="nav-logo-icon">⬡</div>
+    <div class="nav-logo-text">Git<span>_Board</span></div>
+  </a>
+  <div class="nav-right">
+    <button class="theme-btn" id="themeBtn" title="Toggle theme">🌙</button>
+    <button class="nav-cta" onclick="focusSearch()">Analyze Repo</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge">
+    <div class="badge-dot"></div>
+    Live GitHub Analytics
+  </div>
+  <h1>Understand your <span class="accent">repository</span><br>like never before</h1>
+  <p>Deep insights into commits, contributors, issues, languages, and repository health — all in one beautiful dashboard.</p>
+
+  <div class="search-wrap">
+    <svg class="search-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+    </svg>
+    <input id="searchInput" type="text" placeholder="owner/repository  e.g. facebook/react" />
+    <button class="search-btn" onclick="handleSearch()">Analyze →</button>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat"><div class="stat-num">14+</div><div class="stat-label">API Endpoints</div></div>
+    <div class="stat"><div class="stat-num">6</div><div class="stat-label">Analytics Views</div></div>
+    <div class="stat"><div class="stat-num">Live</div><div class="stat-label">GitHub Data</div></div>
+    <div class="stat"><div class="stat-num">Free</div><div class="stat-label">Open Source</div></div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<div class="divider">
+  <div class="section">
+    <div class="section-tag">Features</div>
+    <div class="section-title">Everything you need to analyze a repo</div>
+    <div class="section-sub">From commit heatmaps to bus factor — Git_Board surfaces insights that GitHub doesn't show you.</div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <div class="feature-title">Commit Activity</div>
+        <div class="feature-desc">Weekly commit heatmaps, code frequency, additions vs deletions over the past year.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">👥</div>
+        <div class="feature-title">Contributor Analytics</div>
+        <div class="feature-desc">Leaderboards, bus factor analysis, new contributor tracking and contribution percentages.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🐛</div>
+        <div class="feature-title">Issues & PRs</div>
+        <div class="feature-desc">Open vs closed trends, merge rates, label distribution and stale issue detection.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🌐</div>
+        <div class="feature-title">Language Breakdown</div>
+        <div class="feature-desc">Precise language percentages by bytes — see exactly how much Rust vs TypeScript a repo uses.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📈</div>
+        <div class="feature-title">Repository Growth</div>
+        <div class="feature-desc">Stars, forks, watchers and release cadence tracked over time to visualize momentum.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🏥</div>
+        <div class="feature-title">Health Score</div>
+        <div class="feature-desc">Bus factor risk, stale issues, PR merge rate — a single health signal for any repository.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LIVE PREVIEW -->
+<div class="section">
+  <div class="section-tag">Live Preview</div>
+  <div class="section-title">Real data, right now</div>
+  <div class="section-sub">Here's what Git_Board pulled from facebook/react.</div>
+  <div class="preview-grid">
+    <div class="preview-card">
+      <div class="preview-label">Stars</div>
+      <div class="preview-val">245.8k</div>
+      <div class="preview-sub">↑ Most starred JS lib</div>
+    </div>
+    <div class="preview-card">
+      <div class="preview-label">Contributors</div>
+      <div class="preview-val">100+</div>
+      <div class="preview-sub">↑ Active community</div>
+    </div>
+    <div class="preview-card">
+      <div class="preview-label">Bus Factor</div>
+      <div class="preview-val">6</div>
+      <div class="preview-sub">🟢 Healthy</div>
+    </div>
+    <div class="preview-card">
+      <div class="preview-label">Top Language</div>
+      <div class="preview-val">JS</div>
+      <div class="preview-sub">49.35% of codebase</div>
+    </div>
+  </div>
+</div>
+
+<!-- CTA -->
+<div class="cta">
+  <h2>Ready to analyze your repo?</h2>
+  <p>Paste any public GitHub repository and get instant insights.</p>
+  <div class="cta-btns">
+    <button class="btn-primary" onclick="focusSearch()">Get Started →</button>
+    <button class="btn-ghost" onclick="loadExample()">Try an example</button>
+  </div>
+</div>
+
+<footer>Built with FastAPI · PostgreSQL · GitHub API &nbsp;·&nbsp; Git_Board © 2026</footer>
+
+<!-- FLOATING PROFILE BUBBLE -->
+<a id="profile-bubble" href="https://github.com/vedhegishte25" target="_blank" title="vedhegishte25 on GitHub">
+  <img class="p-avatar-img" src="https://github.com/vedhegishte25.png" alt="vedhegishte25">
+  <div class="p-gh-overlay">
+    <svg width="10" height="10" viewBox="0 0 16 16" fill="white">
+      <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+    </svg>
+  </div>
+</a>
+
+<script>
+  // Splash
+  setTimeout(() => document.getElementById('splash').classList.add('hide'), 2500);
+
+  // Theme
+  let dark = true;
+  document.getElementById('themeBtn').addEventListener('click', () => {
+    dark = !dark;
+    document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+    document.getElementById('themeBtn').textContent = dark ? '🌙' : '☀️';
+  });
+
+  // Search
+  function handleSearch() {
+    const val = document.getElementById('searchInput').value.trim();
+    if (!val) return;
+    const parts = val.split('/');
+    if (parts.length === 2) {
+      window.location.href = `dashboard.html?owner=${parts[0]}&repo=${parts[1]}`;
+    } else {
+      alert('Please enter in format: owner/repo');
+    }
+  }
+
+  document.getElementById('searchInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') handleSearch();
+  });
+
+  function focusSearch() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(() => document.getElementById('searchInput').focus(), 400);
+  }
+
+  function loadExample() {
+    document.getElementById('searchInput').value = 'facebook/react';
+    focusSearch();
+  }
+</script>
+</body>
+</html>

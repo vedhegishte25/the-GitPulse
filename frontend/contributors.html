@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Git_Board — Contributors</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg-primary: #0d0d0f;
+    --bg-secondary: #13131a;
+    --bg-card: #1a1a24;
+    --bg-card-hover: #1f1f2e;
+    --border: rgba(255,255,255,0.07);
+    --border-hover: rgba(139,92,246,0.4);
+    --text-primary: #f0f0f5;
+    --text-secondary: #8b8b9e;
+    --text-muted: #55556a;
+    --accent: #8b5cf6;
+    --accent-soft: rgba(139,92,246,0.08);
+    --green: #10b981;
+    --red: #ef4444;
+  }
+  [data-theme="light"] {
+    --bg-primary: #f8f8fc;
+    --bg-secondary: #f0f0f8;
+    --bg-card: #ffffff;
+    --bg-card-hover: #f5f5ff;
+    --border: rgba(0,0,0,0.08);
+    --border-hover: rgba(139,92,246,0.4);
+    --text-primary: #0d0d1a;
+    --text-secondary: #5a5a7a;
+    --text-muted: #9090aa;
+    --accent: #7c3aed;
+    --accent-soft: rgba(124,58,237,0.06);
+    --green: #059669;
+    --red: #dc2626;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    padding: 0 32px; height: 60px;
+    display: flex; align-items: center; justify-content: space-between;
+    background: rgba(13,13,15,0.88);
+    backdrop-filter: blur(12px);
+    border-bottom: 0.5px solid var(--border);
+    transition: background 0.3s;
+  }
+  [data-theme="light"] nav { background: rgba(248,248,252,0.88); }
+  .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .nav-logo-icon {
+    width: 30px; height: 30px; background: var(--accent);
+    border-radius: 8px; display: flex; align-items: center;
+    justify-content: center; font-size: 15px;
+  }
+  .nav-logo-text { font-size: 16px; font-weight: 700; color: var(--text-primary); }
+  .nav-logo-text span { color: var(--accent); }
+  .nav-right { display: flex; align-items: center; gap: 10px; }
+  .theme-btn {
+    width: 36px; height: 36px; border-radius: 8px;
+    border: 0.5px solid var(--border);
+    background: var(--bg-card); color: var(--text-secondary);
+    cursor: pointer; font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .theme-btn:hover { border-color: var(--border-hover); }
+  .back-btn {
+    padding: 8px 16px; border-radius: 8px;
+    background: var(--bg-card);
+    border: 0.5px solid var(--border);
+    color: var(--text-secondary);
+    cursor: pointer; font-size: 13px;
+    transition: all 0.2s; text-decoration: none;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .back-btn:hover { border-color: var(--border-hover); color: var(--text-primary); }
+
+  /* MAIN */
+  main { padding: 80px 32px 48px; max-width: 1200px; margin: 0 auto; }
+
+  /* PAGE HEADER */
+  .page-header {
+    margin-bottom: 32px;
+    padding-bottom: 28px;
+    border-bottom: 0.5px solid var(--border);
+  }
+  .page-tag {
+    font-size: 11px; font-weight: 700; color: var(--accent);
+    letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 8px;
+  }
+  .page-title {
+    font-size: 28px; font-weight: 800;
+    color: var(--text-primary); letter-spacing: -0.5px;
+    margin-bottom: 6px;
+  }
+  .page-sub { font-size: 14px; color: var(--text-secondary); }
+
+  /* GRID */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
+    gap: 16px; margin-bottom: 16px;
+  }
+  .grid-3 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 16px; margin-bottom: 16px;
+  }
+  .grid-4 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px; margin-bottom: 16px;
+  }
+
+  /* CARD */
+  .card {
+    background: var(--bg-card);
+    border: 0.5px solid var(--border);
+    border-radius: 14px; padding: 24px;
+  }
+  .card-title {
+    font-size: 13px; font-weight: 600;
+    color: var(--text-secondary); margin-bottom: 20px;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+
+  /* STAT CARDS */
+  .stat-card {
+    background: var(--bg-card);
+    border: 0.5px solid var(--border);
+    border-radius: 12px; padding: 20px;
+  }
+  .stat-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .stat-val { font-size: 28px; font-weight: 800; color: var(--text-primary); }
+  .stat-sub { font-size: 12px; color: var(--green); margin-top: 5px; }
+
+  /* LEADERBOARD */
+  .leader-item {
+    display: flex; align-items: center; gap: 14px;
+    padding: 12px 0;
+    border-bottom: 0.5px solid var(--border);
+    transition: background 0.15s;
+  }
+  .leader-item:last-child { border-bottom: none; }
+  .leader-rank {
+    font-size: 12px; font-weight: 700;
+    color: var(--text-muted); width: 24px; text-align: center; flex-shrink: 0;
+  }
+  .rank-1 { color: #f59e0b; font-size: 16px; }
+  .rank-2 { color: #94a3b8; font-size: 14px; }
+  .rank-3 { color: #cd7c3a; font-size: 14px; }
+  .leader-avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    overflow: hidden; flex-shrink: 0;
+    border: 1.5px solid var(--border);
+  }
+  .leader-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .leader-info { flex: 1; min-width: 0; }
+  .leader-name {
+    font-size: 13px; font-weight: 600;
+    color: var(--text-primary); margin-bottom: 5px;
+  }
+  .leader-bar-wrap {
+    height: 4px; background: var(--border);
+    border-radius: 99px; overflow: hidden;
+  }
+  .leader-bar { height: 100%; background: var(--accent); border-radius: 99px; transition: width 0.6s ease; }
+  .leader-right { text-align: right; flex-shrink: 0; }
+  .leader-count { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+  .leader-pct { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+  /* CONTRIBUTOR GRID */
+  .contributor-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px;
+  }
+  .contributor-card {
+    background: var(--bg-card);
+    border: 0.5px solid var(--border);
+    border-radius: 12px; padding: 18px;
+    text-align: center;
+    transition: border-color 0.2s, transform 0.2s;
+    text-decoration: none;
+  }
+  .contributor-card:hover {
+    border-color: var(--border-hover);
+    transform: translateY(-2px);
+  }
+  .contributor-avatar {
+    width: 52px; height: 52px; border-radius: 50%;
+    overflow: hidden; margin: 0 auto 10px;
+    border: 2px solid var(--border);
+  }
+  .contributor-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .contributor-name { font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+  .contributor-count { font-size: 12px; color: var(--text-muted); }
+  .contributor-badge {
+    display: inline-block; margin-top: 8px;
+    padding: 3px 8px; border-radius: 99px;
+    background: var(--accent-soft);
+    border: 0.5px solid rgba(139,92,246,0.15);
+    font-size: 11px; color: var(--accent);
+  }
+
+  /* CHART */
+  .chart-wrap { position: relative; height: 240px; }
+
+  /* BUS FACTOR */
+  .bus-factor-big {
+    text-align: center; padding: 20px 0;
+  }
+  .bus-num {
+    font-size: 64px; font-weight: 800;
+    color: var(--text-primary); line-height: 1;
+  }
+  .bus-risk { font-size: 16px; margin: 10px 0 6px; }
+  .bus-exp { font-size: 13px; color: var(--text-muted); }
+
+  /* NEW CONTRIBUTORS */
+  .new-contrib-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 0; border-bottom: 0.5px solid var(--border);
+  }
+  .new-contrib-item:last-child { border-bottom: none; }
+  .new-contrib-avatar {
+    width: 30px; height: 30px; border-radius: 50%; overflow: hidden; flex-shrink: 0;
+  }
+  .new-contrib-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .new-contrib-name { font-size: 13px; color: var(--text-primary); flex: 1; }
+  .new-contrib-count { font-size: 12px; color: var(--text-muted); }
+
+  /* LOADING */
+  .loading {
+    display: flex; align-items: center; justify-content: center;
+    height: 160px; color: var(--text-muted); font-size: 13px; gap: 8px;
+  }
+  .spinner {
+    width: 16px; height: 16px; border: 2px solid var(--border);
+    border-top-color: var(--accent); border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* FLOATING PROFILE */
+  #profile-bubble {
+    position: fixed; bottom: 16px; right: 16px; z-index: 200;
+    display: flex; align-items: center; gap: 6px;
+    background: var(--bg-card);
+    border: 0.5px solid var(--border);
+    border-radius: 99px; padding: 4px 8px 4px 4px;
+    opacity: 0.4; transition: opacity 0.2s;
+    cursor: pointer; text-decoration: none;
+  }
+  #profile-bubble:hover { opacity: 1; }
+  .p-avatar { width: 22px; height: 22px; border-radius: 50%; overflow: hidden; position: relative; flex-shrink: 0; }
+  .p-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .p-gh {
+    position: absolute; bottom: -1px; right: -2px;
+    width: 10px; height: 10px;
+    background: var(--bg-card); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .p-name { font-size: 11px; color: var(--text-secondary); font-weight: 500; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="index.html">
+    <div class="nav-logo-icon">⬡</div>
+    <div class="nav-logo-text">Git<span>_Board</span></div>
+  </a>
+  <div class="nav-right">
+    <button class="theme-btn" id="themeBtn" title="Toggle theme">🌙</button>
+    <a class="back-btn" href="javascript:history.back()">← Back</a>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<main>
+
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <div class="page-tag">Contributors</div>
+    <div class="page-title" id="pageTitle">Loading...</div>
+    <div class="page-sub" id="pageSub">Fetching contributor data...</div>
+  </div>
+
+  <!-- STAT CARDS -->
+  <div class="grid-4" style="margin-bottom:16px;">
+    <div class="stat-card">
+      <div class="stat-label">Total Contributors</div>
+      <div class="stat-val" id="statTotal">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Total Contributions</div>
+      <div class="stat-val" id="statContribs">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Bus Factor</div>
+      <div class="stat-val" id="statBus">—</div>
+      <div class="stat-sub" id="statBusRisk"></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">New Contributors</div>
+      <div class="stat-val" id="statNew">—</div>
+      <div class="stat-sub">≤ 10 commits</div>
+    </div>
+  </div>
+
+  <!-- LEADERBOARD + CHART -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Top 10 Leaderboard</div>
+      <div id="leaderboard">
+        <div class="loading"><div class="spinner"></div> Loading...</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Contribution Distribution</div>
+      <div class="chart-wrap"><canvas id="contribChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- BUS FACTOR + NEW CONTRIBUTORS -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Bus Factor Analysis</div>
+      <div id="busFactorSection">
+        <div class="loading"><div class="spinner"></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">New Contributors (≤ 10 commits)</div>
+      <div id="newContributors">
+        <div class="loading"><div class="spinner"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ALL CONTRIBUTORS GRID -->
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-title">All Contributors</div>
+    <div id="allContributors">
+      <div class="loading"><div class="spinner"></div> Loading...</div>
+    </div>
+  </div>
+
+</main>
+
+<!-- FLOATING PROFILE BUBBLE -->
+<a id="profile-bubble" href="https://github.com/vedhegishte25" target="_blank" title="vedhegishte25 on GitHub">
+  <img class="p-avatar-img" src="https://github.com/vedhegishte25.png" alt="vedhegishte25">
+  <div class="p-gh-overlay">
+    <svg width="10" height="10" viewBox="0 0 16 16" fill="white">
+      <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+    </svg>
+  </div>
+</a>
+
+<script>
+  const API = 'http://127.0.0.1:8000';
+  const params = new URLSearchParams(window.location.search);
+  const owner = params.get('owner') || 'facebook';
+  const repo = params.get('repo') || 'react';
+
+  // Theme
+  let dark = true;
+  document.getElementById('themeBtn').addEventListener('click', () => {
+    dark = !dark;
+    document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+    document.getElementById('themeBtn').textContent = dark ? '🌙' : '☀️';
+  });
+
+  function fmt(n) {
+    if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
+    return n;
+  }
+
+  function rankLabel(rank) {
+    if (rank === 1) return '🥇';
+    if (rank === 2) return '🥈';
+    if (rank === 3) return '🥉';
+    return rank;
+  }
+
+  // Page title
+  document.getElementById('pageTitle').textContent = `${owner}/${repo}`;
+  document.getElementById('pageSub').textContent = `Contributor analytics for ${owner}/${repo}`;
+
+  // Load all contributors
+  async function loadContributors() {
+    try {
+      const res = await fetch(`${API}/contributors/${owner}/${repo}`);
+      const data = await res.json();
+
+      document.getElementById('statTotal').textContent = data.total_contributors;
+      document.getElementById('statContribs').textContent = fmt(data.total_contributions);
+
+      // All contributors grid
+      document.getElementById('allContributors').innerHTML = `
+        <div class="contributor-grid">
+          ${data.contributors.map(c => `
+            <a class="contributor-card" href="${c.profile}" target="_blank">
+              <div class="contributor-avatar"><img src="${c.avatar}" alt="${c.username}"></div>
+              <div class="contributor-name">${c.username}</div>
+              <div class="contributor-count">${c.contributions} commits</div>
+              <div class="contributor-badge">${c.percentage}%</div>
+            </a>
+          `).join('')}
+        </div>
+      `;
+
+      // Contribution chart — top 10
+      const top10 = data.contributors.slice(0, 10);
+      new Chart(document.getElementById('contribChart'), {
+        type: 'bar',
+        data: {
+          labels: top10.map(c => c.username),
+          datasets: [{
+            data: top10.map(c => c.contributions),
+            backgroundColor: [
+              '#8b5cf6','#7c3aed','#6d28d9','#5b21b6',
+              '#4c1d95','#3b82f6','#2563eb','#1d4ed8',
+              '#10b981','#059669'
+            ],
+            borderWidth: 0, borderRadius: 6,
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          indexAxis: 'y',
+          plugins: { legend: { display: false } },
+          scales: {
+            x: {
+              grid: { color: 'rgba(255,255,255,0.05)' },
+              ticks: { color: '#55556a', font: { size: 11 } }
+            },
+            y: { ticks: { color: '#8b8b9e', font: { size: 11 } } }
+          }
+        }
+      });
+    } catch(e) {
+      document.getElementById('allContributors').innerHTML = `<div style="color:var(--red);text-align:center;padding:20px;">Failed to load contributors</div>`;
+    }
+  }
+
+  // Load leaderboard
+  async function loadLeaderboard() {
+    try {
+      const res = await fetch(`${API}/contributors/${owner}/${repo}/leaderboard`);
+      const data = await res.json();
+      const max = data.leaderboard[0]?.contributions || 1;
+      document.getElementById('leaderboard').innerHTML = data.leaderboard.map(c => `
+        <div class="leader-item">
+          <div class="leader-rank ${c.rank <= 3 ? 'rank-' + c.rank : ''}">${rankLabel(c.rank)}</div>
+          <div class="leader-avatar"><img src="${c.avatar}" alt="${c.username}"></div>
+          <div class="leader-info">
+            <div class="leader-name">${c.username}</div>
+            <div class="leader-bar-wrap">
+              <div class="leader-bar" style="width:${(c.contributions / max * 100).toFixed(1)}%"></div>
+            </div>
+          </div>
+          <div class="leader-right">
+            <div class="leader-count">${c.contributions}</div>
+            <div class="leader-pct">${c.percentage}%</div>
+          </div>
+        </div>
+      `).join('');
+    } catch(e) {}
+  }
+
+  // Load bus factor
+  async function loadBusFactor() {
+    try {
+      const res = await fetch(`${API}/contributors/${owner}/${repo}/bus-factor`);
+      const d = await res.json();
+      document.getElementById('statBus').textContent = d.bus_factor;
+      document.getElementById('statBusRisk').textContent = d.risk_level;
+      document.getElementById('busFactorSection').innerHTML = `
+        <div class="bus-factor-big">
+          <div class="bus-num">${d.bus_factor}</div>
+          <div class="bus-risk">${d.risk_level}</div>
+          <div class="bus-exp">${d.explanation}</div>
+          <div class="bus-exp" style="margin-top:6px;">out of ${d.total_contributors} total contributors</div>
+          <div style="margin-top:20px;padding:14px;background:var(--accent-soft);border-radius:10px;border:0.5px solid rgba(139,92,246,0.15);">
+            <div style="font-size:12px;color:var(--text-secondary);line-height:1.6;">
+              Bus factor measures how many contributors need to leave before a project is in trouble.
+              A higher number means the project is <strong style="color:var(--green)">healthier</strong>.
+            </div>
+          </div>
+        </div>
+      `;
+    } catch(e) {}
+  }
+
+  // Load new contributors
+  async function loadNewContributors() {
+    try {
+      const res = await fetch(`${API}/contributors/${owner}/${repo}/new-contributors`);
+      const data = await res.json();
+      document.getElementById('statNew').textContent = data.total_new_contributors;
+      if (data.new_contributors.length === 0) {
+        document.getElementById('newContributors').innerHTML = `
+          <div style="text-align:center;padding:40px;color:var(--text-muted);font-size:13px;">No new contributors found</div>
+        `;
+        return;
+      }
+      document.getElementById('newContributors').innerHTML = `
+        <div style="max-height:320px;overflow-y:auto;">
+          ${data.new_contributors.map(c => `
+            <div class="new-contrib-item">
+              <div class="new-contrib-avatar"><img src="${c.avatar}" alt="${c.username}"></div>
+              <div class="new-contrib-name">${c.username}</div>
+              <div class="new-contrib-count">${c.contributions} commits</div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    } catch(e) {}
+  }
+
+  // Init
+  loadContributors();
+  loadLeaderboard();
+  loadBusFactor();
+  loadNewContributors();
+</script>
+</body>
+</html>
