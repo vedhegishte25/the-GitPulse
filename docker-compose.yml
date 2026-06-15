@@ -3,7 +3,7 @@ version: "3.9"
 services:
   postgres:
     image: postgres:15
-    container_name: gitboard_postgres
+    container_name: gitpulse_postgres
     restart: always
     environment:
       POSTGRES_USER: gitboard_user

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Git_Board</title>
+<title>GitPulse</title>
 <style>
   :root {
     --bg-primary: #0d0d0f;
@@ -297,28 +297,24 @@
 
   /* FLOATING PROFILE */
   #profile-bubble {
-    position: fixed; bottom: 16px; right: 16px; z-index: 200;
-    display: flex; align-items: center; gap: 6px;
-    background: var(--bg-card);
-    border: 0.5px solid var(--border);
-    border-radius: 99px;
-    padding: 4px 8px 4px 4px;
-    opacity: 0.4; transition: opacity 0.2s;
-    cursor: pointer; text-decoration: none;
-  }
-  #profile-bubble:hover { opacity: 1; }
-  .p-avatar {
-    width: 22px; height: 22px; border-radius: 50%;
-    overflow: hidden; position: relative; flex-shrink: 0;
-  }
-  .p-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .p-gh {
-    position: absolute; bottom: -1px; right: -2px;
-    width: 10px; height: 10px;
-    background: var(--bg-card); border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .p-name { font-size: 11px; color: var(--text-secondary); font-weight: 500; }
+  position: fixed; bottom: 18px; right: 18px; z-index: 200;
+  width: 38px; height: 38px; border-radius: 50%;
+  display: block; text-decoration: none;
+  opacity: 0.5; transition: opacity 0.2s, transform 0.2s;
+}
+#profile-bubble:hover { opacity: 1; transform: scale(1.08); }
+.p-avatar-img {
+  width: 38px; height: 38px; border-radius: 50%;
+  object-fit: cover; display: block;
+  border: 2px solid var(--border);
+}
+.p-gh-overlay {
+  position: absolute; bottom: 0; right: 0;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: #1a1a24;
+  display: flex; align-items: center; justify-content: center;
+  border: 1.5px solid var(--bg-primary);
+}
 </style>
 </head>
 <body>
@@ -326,7 +322,7 @@
 <!-- SPLASH SCREEN -->
 <div id="splash">
   <div class="splash-logo">⬡</div>
-  <div class="splash-title">Git<span>_Board</span></div>
+  <div class="splash-title">Git<span>Pulse</span></div>
   <div class="splash-bar"><div class="splash-fill"></div></div>
   <div class="splash-sub">Initializing analytics engine...</div>
 </div>
@@ -335,7 +331,7 @@
 <nav>
   <a class="nav-logo" href="index.html">
     <div class="nav-logo-icon">⬡</div>
-    <div class="nav-logo-text">Git<span>_Board</span></div>
+    <div class="nav-logo-text">Git<span>Pulse</span></div>
   </a>
   <div class="nav-right">
     <button class="theme-btn" id="themeBtn" title="Toggle theme">🌙</button>
@@ -373,7 +369,7 @@
   <div class="section">
     <div class="section-tag">Features</div>
     <div class="section-title">Everything you need to analyze a repo</div>
-    <div class="section-sub">From commit heatmaps to bus factor — Git_Board surfaces insights that GitHub doesn't show you.</div>
+    <div class="section-sub">From commit heatmaps to bus factor — GitPulse surfaces insights that GitHub doesn't show you.</div>
     <div class="features-grid">
       <div class="feature-card">
         <div class="feature-icon">📊</div>
@@ -413,7 +409,7 @@
 <div class="section">
   <div class="section-tag">Live Preview</div>
   <div class="section-title">Real data, right now</div>
-  <div class="section-sub">Here's what Git_Board pulled from facebook/react.</div>
+  <div class="section-sub">Here's what GitPulse pulled from facebook/react.</div>
   <div class="preview-grid">
     <div class="preview-card">
       <div class="preview-label">Stars</div>
@@ -448,7 +444,7 @@
   </div>
 </div>
 
-<footer>Built with FastAPI · PostgreSQL · GitHub API &nbsp;·&nbsp; Git_Board © 2026</footer>
+<footer>Built with FastAPI · PostgreSQL · GitHub API &nbsp;·&nbsp; GitPulse © 2026</footer>
 
 <!-- FLOATING PROFILE BUBBLE -->
 <a id="profile-bubble" href="https://github.com/vedhegishte25" target="_blank" title="vedhegishte25 on GitHub">

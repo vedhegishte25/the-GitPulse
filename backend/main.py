@@ -19,7 +19,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Git_Board API",
+    title="GitPulse API",
     description="GitHub Analytics Dashboard API",
     version="1.0.0",
     lifespan=lifespan,
@@ -42,7 +42,7 @@ app.include_router(issues.router)
 @app.get("/")
 async def root():
     return {
-        "message": "Welcome to Git_Board API 🚀",
+        "message": "Welcome to GitPulse API 🚀",
         "version": "1.0.0",
         "status": "running",
         "env": settings.app_env,
