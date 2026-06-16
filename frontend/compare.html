@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GitPulse — Compare</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg-primary: #0d0d0f;
+    --bg-secondary: #13131a;
+    --bg-card: #1a1a24;
+    --bg-card-hover: #1f1f2e;
+    --border: rgba(255,255,255,0.07);
+    --border-hover: rgba(139,92,246,0.4);
+    --text-primary: #f0f0f5;
+    --text-secondary: #8b8b9e;
+    --text-muted: #55556a;
+    --accent: #8b5cf6;
+    --accent-soft: rgba(139,92,246,0.08);
+    --green: #10b981;
+    --red: #ef4444;
+    --blue: #3b82f6;
+    --yellow: #f59e0b;
+  }
+  [data-theme="light"] {
+    --bg-primary: #f8f8fc;
+    --bg-secondary: #f0f0f8;
+    --bg-card: #ffffff;
+    --bg-card-hover: #f5f5ff;
+    --border: rgba(0,0,0,0.08);
+    --border-hover: rgba(139,92,246,0.4);
+    --text-primary: #0d0d1a;
+    --text-secondary: #5a5a7a;
+    --text-muted: #9090aa;
+    --accent: #7c3aed;
+    --accent-soft: rgba(124,58,237,0.06);
+    --green: #059669;
+    --red: #dc2626;
+    --blue: #2563eb;
+    --yellow: #d97706;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    padding: 0 32px; height: 60px;
+    display: flex; align-items: center; justify-content: space-between;
+    background: rgba(13,13,15,0.88);
+    backdrop-filter: blur(12px);
+    border-bottom: 0.5px solid var(--border);
+    transition: background 0.3s;
+  }
+  [data-theme="light"] nav { background: rgba(248,248,252,0.88); }
+  .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .nav-logo-icon {
+    width: 30px; height: 30px; background: var(--accent);
+    border-radius: 8px; display: flex; align-items: center;
+    justify-content: center; font-size: 15px;
+  }
+  .nav-logo-text { font-size: 16px; font-weight: 700; color: var(--text-primary); }
+  .nav-logo-text span { color: var(--accent); }
+  .nav-right { display: flex; align-items: center; gap: 10px; }
+  .theme-btn {
+    width: 36px; height: 36px; border-radius: 8px;
+    border: 0.5px solid var(--border);
+    background: var(--bg-card); color: var(--text-secondary);
+    cursor: pointer; font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .theme-btn:hover { border-color: var(--border-hover); }
+  .back-btn {
+    padding: 8px 16px; border-radius: 8px;
+    background: var(--bg-card);
+    border: 0.5px solid var(--border);
+    color: var(--text-secondary);
+    cursor: pointer; font-size: 13px;
+    transition: all 0.2s; text-decoration: none;
+  }
+  .back-btn:hover { border-color: var(--border-hover); color: var(--text-primary); }
+
+  /* MAIN */
+  main { padding: 80px 32px 48px; max-width: 1200px; margin: 0 auto; }
+
+  /* PAGE HEADER */
+  .page-header {
+    margin-bottom: 32px;
+    padding-bottom: 28px;
+    border-bottom: 0.5px solid var(--border);
+  }
+  .page-tag {
+    font-size: 11px; font-weight: 700; color: var(--accent);
+    letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 8px;
+  }
+  .page-title {
+    font-size: 28px; font-weight: 800;
+    color: var(--text-primary); letter-spacing: -0.5px; margin-bottom: 6px;
+  }
+  .page-sub { font-size: 14px; color: var(--text-secondary); }
+
+  /* SEARCH ROW */
+  .compare-inputs {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 16px; align-items: center;
+    margin-bottom: 32px;
+  }
+  .input-wrap {
+    background: var(--bg-card);
+    border: 0.5px solid var(--border);
+    border-radius: 12px;
+    padding: 6px 6px 6px 16px;
+    display: flex; align-items: center; gap: 10px;
+    transition: border-color 0.2s;
+  }
+  .input-wrap:focus-within { border-color: var(--border-hover); }
+  .input-wrap input {
+    flex: 1; background: none; border: none; outline: none;
+    font-size: 14px; color: var(--text-primary); font-family: inherit;
+  }
+  .input-wrap input::placeholder { color: var(--text-muted); }
+  .repo-label {
+    font-size: 11px; font-weight: 700;
+    padding: 3px 8px; border-radius: 99px;
+    flex-shrink: 0;
+  }
+  .repo-label.a { background: rgba(139,92,246,0.15); color: var(--accent); }
+  .repo-label.b { background: rgba(59,130,246,0.15); color: var(--blue); }
+  .vs-badge {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--bg-card);
+    border: 0.5px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 800; color: var(--text-muted);
+    flex-shrink: 0;
+  }
+  .compare-btn {
+    width: 100%; padding: 12px;
+    background: var(--accent); color: #fff;
+    border: none; border-radius: 10px;
+    font-size: 14px; font-weight: 600;
+    cursor: pointer; transition: opacity 0.2s;
+    margin-bottom: 32px;
+  }
+  .compare-btn:hover { opacity: 0.85; }
+
+  /* RESULTS */
+  #results { display: none; }
+
+  /* REPO HEADERS */
+  .repo-headers {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 16px; margin-bottom: 16px;
+  }
+  .repo-header-card {
+    background: var(--bg-card);
+    border: 0.5px solid var(--border);
+    border-radius: 14px; padding: 20px;
+  }
+  .repo-header-card.a { border-top: 2px solid var(--accent); }
+  .repo-header-card.b { border-top: 2px solid var(--blue); }
+  .repo-header-name {
+    font-size: 18px; font-weight: 800;
+    color: var(--text-primary); margin-bottom: 6px;
+  }
+  .repo-header-desc {
+    font-size: 13px; color: var(--text-secondary);
+    line-height: 1.5; margin-bottom: 12px;
+  }
+  .repo-header-meta { display: flex; gap: 16px; flex-wrap: wrap; }
+  .repo-meta-item { font-size: 12px; color: var(--text-muted); }
+  .repo-meta-item span { color: var(--text-primary); font-weight: 700; }
+
+  /* COMPARE TABLE */
+  .compare-table {
+    background: var(--bg-card);
+    border: 0.5px solid var(--border);
+    border-radius: 14px; overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .compare-row {
+    display: grid; grid-template-columns: 1fr 1.5fr 1fr;
+    padding: 14px 20px;
+    border-bottom: 0.5px solid var(--border);
+    align-items: center;
+  }
+  .compare-row:last-child { border-bottom: none; }
+  .compare-row.header {
+    background: var(--bg-secondary);
+    padding: 10px 20px;
+  }
+  .compare-metric { font-size: 12px; color: var(--text-muted); text-align: center; }
+  .compare-label { font-size: 13px; color: var(--text-secondary); font-weight: 500; }
+  .compare-val {
+    font-size: 15px; font-weight: 700;
+    text-align: center; color: var(--text-primary);
+  }
+  .compare-val.winner { color: var(--green); }
+  .compare-val.loser { color: var(--text-muted); }
+
+  /* CHART GRID */
+  .chart-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
+    gap: 16px; margin-bottom: 16px;
+  }
+  .card {
+    background: var(--bg-card);
+    border: 0.5px solid var(--border);
+    border-radius: 14px; padding: 24px;
+  }
+  .card-title {
+    font-size: 13px; font-weight: 600;
+    color: var(--text-secondary); margin-bottom: 20px;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .chart-wrap { position: relative; height: 240px; }
+
+  /* WINNER BANNER */
+  .winner-banner {
+    background: var(--bg-card);
+    border: 0.5px solid var(--border);
+    border-radius: 14px; padding: 24px;
+    text-align: center; margin-bottom: 16px;
+  }
+  .winner-title { font-size: 13px; color: var(--text-muted); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .winner-name { font-size: 28px; font-weight: 800; color: var(--green); }
+  .winner-sub { font-size: 13px; color: var(--text-secondary); margin-top: 6px; }
+
+  /* LOADING */
+  .loading {
+    display: flex; align-items: center; justify-content: center;
+    height: 120px; color: var(--text-muted); font-size: 13px; gap: 8px;
+  }
+  .spinner {
+    width: 16px; height: 16px; border: 2px solid var(--border);
+    border-top-color: var(--accent); border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* FLOATING PROFILE */
+  #profile-bubble {
+    position: fixed; bottom: 18px; right: 18px; z-index: 200;
+    width: 36px; height: 36px; border-radius: 50%;
+    background: #1a1a24;
+    border: 1.5px solid rgba(255,255,255,0.1);
+    display: flex; align-items: center; justify-content: center;
+    text-decoration: none;
+    opacity: 0.5; transition: opacity 0.2s, transform 0.2s;
+  }
+  #profile-bubble:hover { opacity: 1; transform: scale(1.08); }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="index.html">
+    <div class="nav-logo-icon">⬡</div>
+    <div class="nav-logo-text">Git<span>Pulse</span></div>
+  </a>
+  <div class="nav-right">
+    <button class="theme-btn" id="themeBtn" title="Toggle theme">🌙</button>
+    <a class="back-btn" href="index.html">← Home</a>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<main>
+  <div class="page-header">
+    <div class="page-tag">Compare</div>
+    <div class="page-title">Compare Repositories</div>
+    <div class="page-sub">Analyze two GitHub repositories side by side</div>
+  </div>
+
+  <!-- INPUTS -->
+  <div class="compare-inputs">
+    <div class="input-wrap">
+      <span class="repo-label a">A</span>
+      <input id="repoA" type="text" placeholder="owner/repo  e.g. facebook/react" />
+    </div>
+    <div class="vs-badge">VS</div>
+    <div class="input-wrap">
+      <span class="repo-label b">B</span>
+      <input id="repoB" type="text" placeholder="owner/repo  e.g. vuejs/vue" />
+    </div>
+  </div>
+  <button class="compare-btn" onclick="startCompare()">Compare Repositories →</button>
+
+  <!-- RESULTS -->
+  <div id="results">
+
+    <!-- WINNER -->
+    <div class="winner-banner" id="winnerBanner"></div>
+
+    <!-- REPO HEADERS -->
+    <div class="repo-headers">
+      <div class="repo-header-card a" id="headerA">
+        <div class="loading"><div class="spinner"></div></div>
+      </div>
+      <div class="repo-header-card b" id="headerB">
+        <div class="loading"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+    <!-- COMPARE TABLE -->
+    <div class="compare-table">
+      <div class="compare-row header">
+        <div class="compare-label">Metric</div>
+        <div class="compare-metric" id="labelA" style="color:var(--accent);font-weight:700;">Repo A</div>
+        <div class="compare-metric" id="labelB" style="color:var(--blue);font-weight:700;">Repo B</div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-label">⭐ Stars</div>
+        <div class="compare-val" id="cmpStarsA">—</div>
+        <div class="compare-val" id="cmpStarsB">—</div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-label">🍴 Forks</div>
+        <div class="compare-val" id="cmpForksA">—</div>
+        <div class="compare-val" id="cmpForksB">—</div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-label">👁️ Watchers</div>
+        <div class="compare-val" id="cmpWatchA">—</div>
+        <div class="compare-val" id="cmpWatchB">—</div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-label">🐛 Open Issues</div>
+        <div class="compare-val" id="cmpIssuesA">—</div>
+        <div class="compare-val" id="cmpIssuesB">—</div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-label">👥 Contributors</div>
+        <div class="compare-val" id="cmpContribA">—</div>
+        <div class="compare-val" id="cmpContribB">—</div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-label">🚌 Bus Factor</div>
+        <div class="compare-val" id="cmpBusA">—</div>
+        <div class="compare-val" id="cmpBusB">—</div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-label">💻 Top Language</div>
+        <div class="compare-val" id="cmpLangA">—</div>
+        <div class="compare-val" id="cmpLangB">—</div>
+      </div>
+    </div>
+
+    <!-- CHARTS -->
+    <div class="chart-grid">
+      <div class="card">
+        <div class="card-title">Stars Comparison</div>
+        <div class="chart-wrap"><canvas id="starsChart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Contributors Comparison</div>
+        <div class="chart-wrap"><canvas id="contribChart"></canvas></div>
+      </div>
+    </div>
+
+    <div class="chart-grid">
+      <div class="card">
+        <div class="card-title">Language Breakdown — Repo A</div>
+        <div class="chart-wrap"><canvas id="langChartA"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Language Breakdown — Repo B</div>
+        <div class="chart-wrap"><canvas id="langChartB"></canvas></div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- FLOATING PROFILE BUBBLE -->
+<a id="profile-bubble" href="https://github.com/vedhegishte25" target="_blank" title="vedhegishte25 on GitHub">
+  <svg viewBox="0 0 16 16" fill="white" width="20" height="20">
+    <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+  </svg>
+</a>
+
+<script>
+  const API = 'http://127.0.0.1:8000';
+  const LANG_COLORS = ['#8b5cf6','#3b82f6','#10b981','#f59e0b','#ef4444','#ec4899','#06b6d4'];
+
+  // Theme
+  let dark = true;
+  document.getElementById('themeBtn').addEventListener('click', () => {
+    dark = !dark;
+    document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+    document.getElementById('themeBtn').textContent = dark ? '🌙' : '☀️';
+  });
+
+  function fmt(n) {
+    if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+    if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
+    return n;
+  }
+
+  function highlight(a, b, elA, elB, lowerIsBetter = false) {
+    if (a === b) return;
+    const aWins = lowerIsBetter ? a < b : a > b;
+    elA.classList.add(aWins ? 'winner' : 'loser');
+    elB.classList.add(aWins ? 'loser' : 'winner');
+  }
+
+  let starsChartInst, contribChartInst, langAInst, langBInst;
+
+  async function startCompare() {
+    const inputA = document.getElementById('repoA').value.trim();
+    const inputB = document.getElementById('repoB').value.trim();
+    if (!inputA || !inputB) { alert('Please enter both repositories'); return; }
+
+    const [ownerA, repoA] = inputA.split('/');
+    const [ownerB, repoB] = inputB.split('/');
+    if (!ownerA || !repoA || !ownerB || !repoB) {
+      alert('Please enter in format: owner/repo');
+      return;
+    }
+
+    // Show results
+    document.getElementById('results').style.display = 'block';
+    document.getElementById('winnerBanner').innerHTML = `<div class="loading"><div class="spinner"></div> Comparing repositories...</div>`;
+
+    // Update labels
+    document.getElementById('labelA').textContent = inputA;
+    document.getElementById('labelB').textContent = inputB;
+
+    // Destroy old charts
+    [starsChartInst, contribChartInst, langAInst, langBInst].forEach(c => c && c.destroy());
+
+    // Reset table
+    ['A','B'].forEach(x => {
+      ['Stars','Forks','Watch','Issues','Contrib','Bus','Lang'].forEach(m => {
+        const el = document.getElementById(`cmp${m}${x}`);
+        if (el) { el.textContent = '—'; el.className = 'compare-val'; }
+      });
+    });
+
+    try {
+      // Fetch all data in parallel
+      const [repoDataA, repoDataB, contribA, contribB, busA, busB, langA, langB] = await Promise.all([
+        fetch(`${API}/repos/${ownerA}/${repoA}`).then(r => r.json()),
+        fetch(`${API}/repos/${ownerB}/${repoB}`).then(r => r.json()),
+        fetch(`${API}/contributors/${ownerA}/${repoA}`).then(r => r.json()),
+        fetch(`${API}/contributors/${ownerB}/${repoB}`).then(r => r.json()),
+        fetch(`${API}/contributors/${ownerA}/${repoA}/bus-factor`).then(r => r.json()),
+        fetch(`${API}/contributors/${ownerB}/${repoB}/bus-factor`).then(r => r.json()),
+        fetch(`${API}/repos/${ownerA}/${repoA}/languages`).then(r => r.json()),
+        fetch(`${API}/repos/${ownerB}/${repoB}/languages`).then(r => r.json()),
+      ]);
+
+      // Repo headers
+      document.getElementById('headerA').innerHTML = `
+        <div class="repo-header-name">${repoDataA.full_name}</div>
+        <div class="repo-header-desc">${repoDataA.description || 'No description'}</div>
+        <div class="repo-header-meta">
+          <div class="repo-meta-item">Stars <span>${fmt(repoDataA.stars)}</span></div>
+          <div class="repo-meta-item">Forks <span>${fmt(repoDataA.forks)}</span></div>
+          <div class="repo-meta-item">Language <span>${repoDataA.language || '—'}</span></div>
+        </div>
+      `;
+      document.getElementById('headerB').innerHTML = `
+        <div class="repo-header-name">${repoDataB.full_name}</div>
+        <div class="repo-header-desc">${repoDataB.description || 'No description'}</div>
+        <div class="repo-header-meta">
+          <div class="repo-meta-item">Stars <span>${fmt(repoDataB.stars)}</span></div>
+          <div class="repo-meta-item">Forks <span>${fmt(repoDataB.forks)}</span></div>
+          <div class="repo-meta-item">Language <span>${repoDataB.language || '—'}</span></div>
+        </div>
+      `;
+
+      // Fill table
+      document.getElementById('cmpStarsA').textContent = fmt(repoDataA.stars);
+      document.getElementById('cmpStarsB').textContent = fmt(repoDataB.stars);
+      highlight(repoDataA.stars, repoDataB.stars, document.getElementById('cmpStarsA'), document.getElementById('cmpStarsB'));
+
+      document.getElementById('cmpForksA').textContent = fmt(repoDataA.forks);
+      document.getElementById('cmpForksB').textContent = fmt(repoDataB.forks);
+      highlight(repoDataA.forks, repoDataB.forks, document.getElementById('cmpForksA'), document.getElementById('cmpForksB'));
+
+      document.getElementById('cmpWatchA').textContent = fmt(repoDataA.watchers);
+      document.getElementById('cmpWatchB').textContent = fmt(repoDataB.watchers);
+      highlight(repoDataA.watchers, repoDataB.watchers, document.getElementById('cmpWatchA'), document.getElementById('cmpWatchB'));
+
+      document.getElementById('cmpIssuesA').textContent = fmt(repoDataA.open_issues);
+      document.getElementById('cmpIssuesB').textContent = fmt(repoDataB.open_issues);
+      highlight(repoDataA.open_issues, repoDataB.open_issues, document.getElementById('cmpIssuesA'), document.getElementById('cmpIssuesB'), true);
+
+      document.getElementById('cmpContribA').textContent = contribA.total_contributors;
+      document.getElementById('cmpContribB').textContent = contribB.total_contributors;
+      highlight(contribA.total_contributors, contribB.total_contributors, document.getElementById('cmpContribA'), document.getElementById('cmpContribB'));
+
+      document.getElementById('cmpBusA').textContent = busA.bus_factor;
+      document.getElementById('cmpBusB').textContent = busB.bus_factor;
+      highlight(busA.bus_factor, busB.bus_factor, document.getElementById('cmpBusA'), document.getElementById('cmpBusB'));
+
+      document.getElementById('cmpLangA').textContent = repoDataA.language || '—';
+      document.getElementById('cmpLangB').textContent = repoDataB.language || '—';
+
+      // Winner calculation
+      let scoreA = 0, scoreB = 0;
+      if (repoDataA.stars > repoDataB.stars) scoreA++; else scoreB++;
+      if (repoDataA.forks > repoDataB.forks) scoreA++; else scoreB++;
+      if (contribA.total_contributors > contribB.total_contributors) scoreA++; else scoreB++;
+      if (busA.bus_factor > busB.bus_factor) scoreA++; else scoreB++;
+      if (repoDataA.open_issues < repoDataB.open_issues) scoreA++; else scoreB++;
+
+      const winner = scoreA > scoreB ? inputA : inputB;
+      document.getElementById('winnerBanner').innerHTML = `
+        <div class="winner-title">Overall Winner</div>
+        <div class="winner-name">🏆 ${winner}</div>
+        <div class="winner-sub">Won ${Math.max(scoreA, scoreB)} out of 5 metrics</div>
+      `;
+
+      // Stars chart
+      starsChartInst = new Chart(document.getElementById('starsChart'), {
+        type: 'bar',
+        data: {
+          labels: [inputA, inputB],
+          datasets: [{
+            data: [repoDataA.stars, repoDataB.stars],
+            backgroundColor: ['rgba(139,92,246,0.7)', 'rgba(59,130,246,0.7)'],
+            borderColor: ['#8b5cf6', '#3b82f6'],
+            borderWidth: 1, borderRadius: 8,
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { ticks: { color: '#8b8b9e', font: { size: 11 } } },
+            y: {
+              grid: { color: 'rgba(255,255,255,0.05)' },
+              ticks: { color: '#55556a', font: { size: 11 }, callback: v => fmt(v) }
+            }
+          }
+        }
+      });
+
+      // Contributors chart
+      contribChartInst = new Chart(document.getElementById('contribChart'), {
+        type: 'bar',
+        data: {
+          labels: [inputA, inputB],
+          datasets: [{
+            data: [contribA.total_contributors, contribB.total_contributors],
+            backgroundColor: ['rgba(139,92,246,0.7)', 'rgba(59,130,246,0.7)'],
+            borderColor: ['#8b5cf6', '#3b82f6'],
+            borderWidth: 1, borderRadius: 8,
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { ticks: { color: '#8b8b9e', font: { size: 11 } } },
+            y: {
+              grid: { color: 'rgba(255,255,255,0.05)' },
+              ticks: { color: '#55556a', font: { size: 11 } }
+            }
+          }
+        }
+      });
+
+      // Language charts
+      const topLangA = langA.slice(0, 5);
+      langAInst = new Chart(document.getElementById('langChartA'), {
+        type: 'doughnut',
+        data: {
+          labels: topLangA.map(l => l.language),
+          datasets: [{ data: topLangA.map(l => l.percentage), backgroundColor: LANG_COLORS, borderWidth: 0 }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false, cutout: '65%',
+          plugins: { legend: { position: 'right', labels: { color: '#8b8b9e', font: { size: 11 }, boxWidth: 10 } } }
+        }
+      });
+
+      const topLangB = langB.slice(0, 5);
+      langBInst = new Chart(document.getElementById('langChartB'), {
+        type: 'doughnut',
+        data: {
+          labels: topLangB.map(l => l.language),
+          datasets: [{ data: topLangB.map(l => l.percentage), backgroundColor: LANG_COLORS, borderWidth: 0 }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false, cutout: '65%',
+          plugins: { legend: { position: 'right', labels: { color: '#8b8b9e', font: { size: 11 }, boxWidth: 10 } } }
+        }
+      });
+
+    } catch(e) {
+      document.getElementById('winnerBanner').innerHTML = `<div style="color:var(--red);font-size:13px;">Failed to load one or both repositories. Check the names and try again.</div>`;
+    }
+  }
+
+  // Enter key support
+  document.getElementById('repoA').addEventListener('keydown', e => { if (e.key === 'Enter') startCompare(); });
+  document.getElementById('repoB').addEventListener('keydown', e => { if (e.key === 'Enter') startCompare(); });
+</script>
+</body>
+</html>
