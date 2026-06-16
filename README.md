@@ -78,14 +78,16 @@ New contributors with 10 or fewer commits are tracked separately to monitor comm
   - `/repos/{owner}/{repo}/releases` — Release history
   - `/repos/{owner}/{repo}/stats/code_frequency` — Code frequency
 
-<br>
+---
 
 ## Developer
 
-**Ved Hegishte** — [@vedhegishte25](https://github.com/vedhegishte25)
-📧 vedhegishte11@gmail.com
+**Ved Hegishte**
+- GitHub: [@vedhegishte25](https://github.com/vedhegishte25)
+- Email: vedhegishte11@gmail.com
 
-<br>
+
+---
 
 ## License
 
