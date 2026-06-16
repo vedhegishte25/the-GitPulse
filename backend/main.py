@@ -12,11 +12,10 @@ settings = get_settings()
 async def lifespan(app: FastAPI):
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    print("✅ Database connected and tables ready")
+    print("Database connected and tables ready")
     yield
     await engine.dispose()
-    print("🔴 Database disconnected")
-
+    print("Database disconnected")
 
 app = FastAPI(
     title="GitPulse API",

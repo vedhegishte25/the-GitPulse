@@ -1,0 +1,14 @@
+{
+  "name": "gitpulse",
+  "version": "1.0.0",
+  "description": "GitHub Analytics Dashboard",
+  "scripts": {
+    "dev": "concurrently \"venv\\\\Scripts\\\\uvicorn backend.main:app --reload\" \"http-server frontend -p 3000 --cors\"",
+    "backend": "venv\\Scripts\\uvicorn backend.main:app --reload",
+    "frontend": "http-server frontend -p 3000 --cors"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "http-server": "^14.1.1"
+  }
+}
